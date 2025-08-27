@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Focus Dashboard</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@400;700&display=swap"
+        rel="stylesheet" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <!-- App Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="logo">FD</div>
+                <div>
+                    <h1>Focus Dashboard</h1>
+                    <p class="tagline">Build deep work habits</p>
+                </div>
+            </div>
+
+            <div class="header-stats">
+                <div class="stat-chip">
+                    <span class="label">Total Focused</span>
+                    <span class="value" id="total-hours">0 hours 0 minutes</span>
+                </div>
+                <div class="stat-chip">
+                    <span class="label focus-ratio-title">Daily Focus Ratio</span>
+                    <span class="value" id="focus-ratio-display">0 / 0</span>
+                </div>
+                <a href="motivation.html" class="nav-button">Motivation & Mantras</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Timers -->
+        <section class="widget-container timers-section">
+            <!-- Pomodoro -->
+            <div class="timer-widget" id="pomodoro" aria-label="Pomodoro Timer">
+                <div class="widget-head">
+                    <h3>Pomodoro Timer</h3>
+                    <span class="subtle">Focus & Break cycles</span>
+                </div>
+
+                <div class="timer-display" id="pomodoro-display" aria-live="polite">25:00</div>
+
+                <div class="timer-settings">
+                    <div class="setting">
+                        <label for="focus-time-input">Focus (min)</label>
+                        <input type="number" id="focus-time-input" value="25" min="1" inputmode="numeric" />
+                    </div>
+                    <div class="setting">
+                        <label for="break-time-input">Break (min)</label>
+                        <input type="number" id="break-time-input" value="5" min="1" inputmode="numeric" />
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="pomodoro-start" class="btn primary">Start</button>
+                    <button id="pomodoro-pause" class="btn ghost">Pause</button>
+                    <button id="pomodoro-reset" class="btn outline">Reset</button>
+                </div>
+            </div>
+
+            <!-- Flowmodoro -->
+            <div class="timer-widget" id="flowmodoro" aria-label="Flowmodoro Stopwatch">
+                <div class="widget-head">
+                    <h3>Flowmodoro (Stopwatch)</h3>
+                    <span class="subtle">Free-form deep work</span>
+                </div>
+
+                <div class="timer-display" id="flowmodoro-display" aria-live="polite">00:00:00</div>
+                <div class="controls">
+                    <button id="flowmodoro-start" class="btn primary">Start Flow</button>
+                    <button id="flowmodoro-stop" class="btn success">Stop & Log</button>
+                    <button id="flowmodoro-reset" class="btn outline">Reset</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tasks -->
+        <section class="widget-container">
+            <div class="widget-head">
+                <h3>Task List</h3>
+                <span class="subtle">Press Enter to add</span>
+            </div>
+            <div class="task-input-container">
+                <input type="text" id="task-input" placeholder="Add a new task..." aria-label="New task" />
+                <button id="add-task-btn" class="btn primary">Add</button>
+            </div>
+            <ul id="task-list" class="task-list" aria-live="polite"></ul>
+        </section>
+
+        <!-- Ambience -->
+        <section class="widget-container">
+            <h3>Ambience Sounds</h3>
+            <div class="video-players">
+                <div class="video-wrapper">
+                    <h4>Lofi Girl</h4>
+                    <iframe loading="lazy" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=0" title="Lofi Girl"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+                </div>
+                <div class="video-wrapper">
+                    <h4>Brown Noise</h4>
+                    <iframe loading="lazy" src="https://www.youtube.com/embed/RqzGzwTY-6w?autoplay=0"
+                        title="Brown Noise" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+                </div>
+                <div class="video-wrapper">
+                    <h4>Rain Sounds</h4>
+                    <iframe loading="lazy" src="https://youtube.com/embed/buqt6_CjtuI" title="Rain Sounds"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+                </div>
+                <div class="video-wrapper">
+                    <h4>Isochronic Tones</h4>
+                    <iframe loading="lazy" src="https://youtube.com/embed/DccxI_1Enj8?autoplay=0"
+                        title="Isochronic Tones" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- Weekly Report -->
+        <section class="widget-container">
+            <h3>This Week's Report</h3>
+            <div id="weekly-report"></div>
+        </section>
+    </main>
+
+    <!-- Toasts -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Audio -->
+    <audio id="notification-sound" src="notification.mp3" preload="auto"></audio>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+
+</html>
