@@ -4,7 +4,84 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationSound = document.getElementById('notification-sound');
     const focusRatioDisplay = document.getElementById('focus-ratio-display');
 
-    // --- SIMPLE TOASTS (non-blocking instead of alerts) ---
+    // --- MANTRAS (sourced from Motivation & Mantras page) ---
+    const MANTRAS = [
+        "The Grind is the Glory.",
+        "Every second you spend elsewhere is taken from something that matters.",
+        "Learning is not supposed to be fun. It should feel like effort — the mental equivalent of sweating.",
+        "Seek the meal, not the snack. Textbooks, docs, longform. Allocate the time. Process, manipulate, learn.",
+        "If your work doesn't make you hate it for how difficult it is, are you really even trying?",
+        "Your brain should feel overwhelmed with how much there is to learn and how little time you have.",
+        "Sit down and bear the discomfort. This is the sign of your brain changing and adapting.",
+        "There is no cheat code. No shortcut. You have to put in the hours.",
+        "Getting better is a product of Practice and Consistency.",
+        "\"My competitive advantage is that I am willing to sit down and fully debug and completely understand code.\" — Young OpenAI Engineer",
+        "Effortless is a myth. — Roger Federer",
+        "Grit > Gift.",
+        "Discipline is talent.",
+        "Belief in yourself has to be earned.",
+        "You only have one life and time is ticking away.",
+        "Time is not stopping for you. Every second you spend is gone forever.",
+        "Have a clear goal for each session. Know the why.",
+        "Break down every concept. Learn bit by bit.",
+        "This exact moment will never come back in your lifetime. Use it.",
+        "Have strong resilience. There is no shortcut to success — you have to put in the hours.",
+        "Be a person of character. Stand by your constitution.",
+        "Every wrong move you take, you trade it with something. Every action has multi-order consequences.",
+        "Close those tabs of 'Learn XYZ in 10 minutes'. Seek depth.",
+        "Declare your intent: are you consuming content to be entertained, or to learn?",
+    ];
+
+    // --- FOCUS MODE STATE ---
+    let focusMode = false;
+    let activeTimerType = null; // 'pomodoro' | 'flow'
+    let mantraInterval = null;
+    let currentMantraIndex = 0;
+
+    const focusOverlay = document.getElementById('focus-overlay');
+    const focusTimerEl = document.getElementById('focus-timer-display');
+    const focusPhaseEl = document.getElementById('focus-phase');
+    const focusPauseBtn = document.getElementById('focus-pause-btn');
+    const focusExitBtn = document.getElementById('focus-exit-btn');
+    const focusMantraEl = document.getElementById('focus-mantra');
+
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+    }
+
+    function showMantra() {
+        focusMantraEl.classList.add('fade-out');
+        setTimeout(() => {
+            focusMantraEl.textContent = MANTRAS[currentMantraIndex];
+            currentMantraIndex = (currentMantraIndex + 1) % MANTRAS.length;
+            focusMantraEl.classList.remove('fade-out');
+        }, 600);
+    }
+
+    function enterFocusMode(timerType) {
+        focusMode = true;
+        activeTimerType = timerType;
+        shuffleArray(MANTRAS);
+        currentMantraIndex = 0;
+        focusOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        showMantra();
+        mantraInterval = setInterval(showMantra, 300_000); // every 5 minutes
+    }
+
+    function exitFocusMode() {
+        focusMode = false;
+        activeTimerType = null;
+        focusOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        clearInterval(mantraInterval);
+        mantraInterval = null;
+    }
+
+    // --- SIMPLE TOASTS ---
     const toastContainer = document.getElementById('toast-container');
     function toast(message, ms = 2600) {
         const t = document.createElement('div');
@@ -37,12 +114,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         pomodoroDisplay.textContent = text;
         document.title = `${text} — ${isBreakTime ? 'Break' : 'Focus'} · Focus Dashboard`;
+        if (focusMode && activeTimerType === 'pomodoro') {
+            focusTimerEl.textContent = text;
+        }
     }
 
     function startPomodoro() {
         if (!isPomodoroPaused) return;
         isPomodoroPaused = false;
-        startBtn.textContent = 'Start';
+        startBtn.textContent = 'Resume';
+
+        if (!focusMode) {
+            enterFocusMode('pomodoro');
+        }
+        focusPhaseEl.textContent = isBreakTime ? 'Break Time' : 'Focus';
+        focusPauseBtn.textContent = 'Pause';
+
         pomodoroInterval = setInterval(() => {
             if (pomodoroSeconds > 0) {
                 pomodoroSeconds--;
@@ -52,14 +139,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 try { notificationSound.play().catch(() => { }); } catch (e) { }
                 let message = "Break's over! Time to focus.";
                 if (!isBreakTime) {
-                    // Focus completed, log focus window
                     const focusSecs = parseInt(focusInput.value, 10) * 60;
                     logStudyTime(focusSecs);
-                    message = 'Focus session complete! Logged successfully. Time for a break.';
+                    message = 'Focus session complete! Logged. Time for a break.';
                 }
                 isBreakTime = !isBreakTime;
                 resetPomodoro();
                 toast(message);
+                // Auto-advance to next phase while in focus mode
+                if (focusMode) {
+                    setTimeout(() => startPomodoro(), 800);
+                }
             }
         }, 1000);
     }
@@ -98,8 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const hours = Math.floor(flowSeconds / 3600);
         const minutes = Math.floor((flowSeconds % 3600) / 60);
         const seconds = flowSeconds % 60;
-        flowmodoroDisplay.textContent =
-            `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        const text = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        flowmodoroDisplay.textContent = text;
+        if (focusMode && activeTimerType === 'flow') {
+            focusTimerEl.textContent = text;
+        }
     }
 
     flowStartBtn.addEventListener('click', () => {
@@ -109,6 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
             flowSeconds = Math.floor((Date.now() - startAt) / 1000);
             updateFlowmodoroDisplay();
         }, 1000);
+        focusPhaseEl.textContent = 'Flow';
+        focusPauseBtn.textContent = 'Pause';
+        enterFocusMode('flow');
     });
 
     flowStopBtn.addEventListener('click', () => {
@@ -119,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toast(`Logged ${Math.floor(flowSeconds / 60)} minutes of flow time.`);
             flowSeconds = 0;
             updateFlowmodoroDisplay();
+            if (focusMode) exitFocusMode();
         }
     });
 
@@ -127,6 +224,44 @@ document.addEventListener('DOMContentLoaded', () => {
         flowInterval = null;
         flowSeconds = 0;
         updateFlowmodoroDisplay();
+        if (focusMode) exitFocusMode();
+    });
+
+    // --- FOCUS OVERLAY CONTROLS ---
+    focusPauseBtn.addEventListener('click', () => {
+        if (activeTimerType === 'pomodoro') {
+            if (isPomodoroPaused) {
+                startPomodoro();
+            } else {
+                pausePomodoro();
+                focusPauseBtn.textContent = 'Resume';
+            }
+        } else if (activeTimerType === 'flow') {
+            if (flowInterval) {
+                // Pause flow
+                clearInterval(flowInterval);
+                flowInterval = null;
+                focusPauseBtn.textContent = 'Resume';
+            } else {
+                // Resume flow from saved flowSeconds
+                const startAt = Date.now() - flowSeconds * 1000;
+                flowInterval = setInterval(() => {
+                    flowSeconds = Math.floor((Date.now() - startAt) / 1000);
+                    updateFlowmodoroDisplay();
+                }, 1000);
+                focusPauseBtn.textContent = 'Pause';
+            }
+        }
+    });
+
+    focusExitBtn.addEventListener('click', () => {
+        if (activeTimerType === 'pomodoro' && !isPomodoroPaused) {
+            pausePomodoro();
+        } else if (activeTimerType === 'flow' && flowInterval) {
+            clearInterval(flowInterval);
+            flowInterval = null;
+        }
+        exitFocusMode();
     });
 
     // --- TASK LIST ---
@@ -210,11 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = new Date().toISOString().slice(0, 10);
         const secondsStudiedToday = dailyLog[today] || 0;
         const hoursStudied = Math.floor(secondsStudiedToday / 3600);
-
-        // Hours passed in the day (1..24). Avoid divide-by-zero at midnight.
         const now = new Date();
         const hoursPassed = Math.max(1, now.getHours());
-
         focusRatioDisplay.textContent = `${hoursStudied} / ${hoursPassed}`;
     }
 
